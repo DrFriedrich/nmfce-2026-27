@@ -1,0 +1,9 @@
+.rise-enabled .cm-editor {
+    font-size: 2rem;
+}
+.rise-enabled .jp-OutputArea pre {
+    font-size: 2rem;
+}
+.rise-enabled .jp-RenderedHTMLCommon {
+    font-size: 2rem;
+}
