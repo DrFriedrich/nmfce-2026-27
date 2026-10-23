@@ -1,0 +1,126 @@
+###W05-W1_ex1_start_py
+import numpy as np
+
+def det_2x2_matrix(m):
+    # m: must be a 2x2 matrix 
+    # ----------------------------------------------------------------------
+    # For a 2x2 matrix, the determinant is the subtraction of the product 
+    # of the top left and bottom right element from the product of other two:
+    # -----------------------------------------------------------------------
+    det_m = (m[0,0]*m[-1,-1]) - (m[1,0]*m[0,1])
+    return(det_m)
+
+s = np.array([[1,2],[3,4]])
+print(det_2x2_matrix(s))
+###W05-W1_ex1_end
+
+###W05-W1_ex2_start_py
+# This code provides an approach for calculating the determinant of a 3x3 matrix. 
+# There are many other ways to solve this problem; this is simply one, very complicated suggestion.
+def Det_matrix(M):
+    r,c = np.shape(M)
+    k =0
+    l =0
+    det_rem_o = 0
+    for i in range(r):
+        top_row = M[0][l] # cofactor: is the element of the top row
+        l=l+1
+        if (i==0):
+            k=k+1
+            # remaining : is the matrix remaining once top_row element’s row and column are removed
+            remaining = M[1:r,k:c]
+            #--------------------------------------------------------------------------------------
+            # here we call the function "det_2x2_matrix" to calculale the determinant of the 
+            # matrix remaining 
+            det_rem = det_2x2_matrix(remaining)
+            #  ------------------------------------------------------------------------------------
+            det_rem = det_rem_o + ((-1)**(i))*top_row*det_rem
+            det_rem_o = det_rem
+            k =0
+        elif (i>0 and i<(r-1)):
+            # ----- use of the np.hstack function: ------------------ #
+            # Here we construct a remaining matrix (when the cofactor is in between the first and last column)
+            # by selecting specific elements or slices from M:
+            remaining = np.hstack((M[1:r,k:k+i],M[1:r,k+(i+1):c]))
+            # -----------------------------------------------------------------------------------------------
+            det_rem = det_2x2_matrix(remaining)
+            det_rem = det_rem_o + ((-1)**(i))*top_row*det_rem
+            det_rem_o = det_rem
+            k =0
+        else:
+            remaining = M[1:r,k:c-1]
+            det_rem = det_2x2_matrix(remaining)
+            det_rem = det_rem_o + ((-1)**(i))*top_row*det_rem
+        #print(remaining)
+    return(det_rem)
+
+def det3_simple(A):
+    # A much simpler implementation
+    return A[0,0]*det_2x2_matrix(A[1:,1:]) - A[0,1]*det_2x2_matrix(A[1:,0::2]) + A[0,2]*det_2x2_matrix(A[1:,0:2])
+###W05-W1_ex2_end
+
+###W05-W1_ex3_start_py
+M = np.array([[4,1,4],[1,7,1],[4,1,4]])
+# SymPy is a Python library for symbolic mathematics
+# allowing to solve algebraic equations (linear and nonlinear)
+# and systems of equations symbolically.
+# -----------------------------------------------------------------
+import sympy as sp
+# symbols() function's argument is a string containing symbol 
+# which can be assigned to a variable. In this case we use "lambda"
+# to represent the eigenvalues.
+# -----------------------------------------------------------------
+lam = sp.symbols('lambda')
+#------------------------------------------------------------------
+# Identity matrix of order "n"
+In  = sp.eye(3)
+#------------------------------------------------------------------
+# c_poly: is the characteristic polynomial from solving Eq.2
+c_poly = sp.det(M - lam * In)
+print("characteristic polynomial:",c_poly)
+#-------------------------------------------------------------------------
+#-- calculation of eigenvalues, Eigs, solving characteristic polynomial --
+Eigs = sp.roots(sp.Poly(c_poly, lam))
+print("Eigenvalues of M:",Eigs)
+#-------------------------------------------------------------------------
+#-- calculation of eigenvalues from characteristic polynomial with numpy--
+print(sp.Poly(c_poly, lam).all_coeffs())
+Eigs_np = np.roots(sp.Poly(c_poly, lam).all_coeffs())
+print("Eigenvalues of M with numpy:", Eigs_np)
+###W05-W1_ex3_end
+
+###W05-W1_ex4_start_py
+# Vector iteration (Power method) for largest Eigenvalue and Eigenvector#
+#------------------------------------------------------------------------
+# Guessed starting vector and largest eigenvalue
+veco = np.array([[1],[1],[1]])
+lambda_max = 1.0e-4
+#-------------------------------------------------------------------------
+# Convergence tolerance
+tol = 1.0e-3
+#-------------------------------------------------------------------------------
+# The next iterative procedure is excecuted  many times ( open while loop)
+# until the convergence is achieved and the calculations stop ( break statement).
+#-------------------------------------------------------------------------------
+while 1 > 0:
+    # Matrix-by-vector multiplication 
+    veci     = np.dot(K,veco)
+    lambda_o = max(veci)
+    print(lambda_o)
+    # vector normalization ----------------
+    veci_n   = veci/abs(max(veci))
+    # -------------------------------------
+    # Convergence criteria ----------------
+    diff     = abs(lambda_o)-abs(lambda_max)
+    # --------------------------------------
+    if abs(diff) < tol:
+        print("largest eigenvalue:",lambda_o,np.round(lambda_o))
+        print("Eigenvector @ largest:",veci_n)
+        break  
+    else:
+       
+        if (abs(lambda_o)>abs(lambda_max)):
+            lambda_max = lambda_o
+        # go back to Step 1:
+        veco = veci_n
+###W05-W1_ex4_end
