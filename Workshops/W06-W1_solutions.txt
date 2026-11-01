@@ -1,0 +1,141 @@
+###W06-W1_ex1_start_md
+Increasing the number of partitions $N$, i.e. decreasing the width of the partitions, is a straightforward way to obtain better accuracy using these methods. For instance, with $N = 300$, we get the correct value within $10^{-2}$.
+
+We can calculate and plot the error on a log-log scale for different values of N:
+
+###W06-W1_ex1_switch_py
+def riemann_sum(f, a, b, N, direction):
+    '''
+    Returns an estimation of the integral of f over [a, b]
+    using left or right Riemann sum with N intervals.
+    '''
+    # Calculate the nodes and weights
+    x_node = np.linspace(a, b, N+1)
+    h = (b - a) / N
+
+    # Compute the sum depending on the method
+    if direction == 'left':
+        x_node = x_node[:-1]
+    elif direction == 'right':
+        x_node = x_node[1:]
+    else:
+        print('Choose \'left\' or \'right\' for direction.')
+        return
+
+    return np.sum(h * f(x_node))
+
+
+# Test accuracy with different values of N: 4, 8, 16, 32...
+err = []
+N_vals = []
+for i in range(2, 11):
+    N = 2**i
+    N_vals.append(N)
+    err.append(abs(I_exact - riemann_sum(f, 0, 3, N, 'left')))
+
+# Plot log(N) vs. log(err)
+fig, ax = plt.subplots()
+ax.plot(np.log(N_vals), np.log(err), 'gx', label='log(error)')
+
+# Fit a line (a deg. 1 polynomial) through the points
+line_coeffs = np.polyfit(np.log(N_vals), np.log(err), 1)
+
+# Plot the line on the same graph
+x_plot = np.linspace(1, 8, 100)
+line_plot = np.polyval(line_coeffs, x_plot)
+ax.plot(x_plot, line_plot, 'r-', label='Line of best fit')
+
+ax.legend()
+
+print(f'The slope is {line_coeffs[0]:.6f}.')
+plt.show()
+###W06-W1_ex1_switch_md
+A line of slope $-1$ means that the error decreases **linearly** with increasing N.
+###W06-W1_ex1_end
+
+###W06-W1_ex2_start_py
+We can calculate and plot the error on a log-log scale for different values of N:
+
+###W06-W1_ex2_switch_py
+def midpoint(f, a, b, N):
+    '''
+    Returns an estimation of the integral of f over [a, b]
+    using the midpoint rule with N intervals.
+    '''
+    # Calculate the nodes
+    h = (b - a) / N
+    x_node = np.linspace(a + 0.5*h, b, N)
+
+    # Compute the sum and return it
+    return np.sum(h * f(x_node))
+
+
+# Test accuracy with different values of N: 4, 8, 16, 32...
+err = []
+N_vals = []
+for i in range(2, 11):
+    N = 2**i
+    N_vals.append(N)
+    err.append(abs(I_exact - midpoint(f, 0, 3, N)))
+
+# Plot log(N) vs. log(err)
+fig, ax = plt.subplots()
+ax.plot(np.log(N_vals), np.log(err), 'gx', label='log(error)')
+
+# Fit a line (a deg. 1 polynomial) through the points
+line_coeffs = np.polyfit(np.log(N_vals), np.log(err), 1)
+
+# Plot the line on the same graph
+x_plot = np.linspace(1, 8, 100)
+line_plot = np.polyval(line_coeffs, x_plot)
+ax.plot(x_plot, line_plot, 'r-', label='Line of best fit')
+
+ax.legend()
+
+print(f'The slope is {line_coeffs[0]:.6f}.')
+plt.show()
+###W06-W1_ex2_switch_md
+A line of slope $-1$ means that the error decreases **linearly** with increasing N.
+###W06-W1_ex2_end
+
+###W06-W1_ex3_start_py
+def trapezoid(f, a, b, N):
+    '''
+    Returns an estimation of the integral of f over [a, b]
+    using the trapezoid rule with N intervals.
+    '''
+    # Calculate the nodes
+    x_node = np.linspace(a, b, N+1)
+    h = (b - a) / N
+
+    # Compute the sum and return it
+    return np.sum(0.5 * h * (f(x_node[:-1]) + f(x_node[1:])))
+
+
+# Test accuracy with different values of N: 4, 8, 16, 32...
+err = []
+N_vals = []
+for i in range(2, 16):
+    N = 2**i
+    N_vals.append(N)
+    err.append(abs(I_exact - trapezoid(f, 0, 3, N)))
+
+# Plot log(N) vs. log(err)
+fig, ax = plt.subplots()
+ax.plot(np.log(N_vals), np.log(err), 'gx', label='log(error)')
+
+# Fit a line (a deg. 1 polynomial) through the points
+line_coeffs = np.polyfit(np.log(N_vals), np.log(err), 1)
+
+# Plot the line on the same graph
+x_plot = np.linspace(1, 12, 100)
+line_plot = np.polyval(line_coeffs, x_plot)
+ax.plot(x_plot, line_plot, 'r-', label='Line of best fit')
+
+ax.legend()
+
+print(f'The slope is {line_coeffs[0]:.6f}.')
+plt.show()
+###W06-W1_ex3_switch_md
+A slope of -2 signifies that the error decreases with $N^2$. This means that the trapezoid rule gives a more accurate estimate than Riemann or midpoint rules, for smaller values of $N$.
+###W06-W1_ex3_end
