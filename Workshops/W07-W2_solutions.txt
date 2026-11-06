@@ -1,0 +1,151 @@
+###W07-W2_parta_start_md
+**Solution part a)**
+
+The rate of change in the water volume $V$ in the tank is given by the mass balance between inflow minus outflow
+$$
+\frac{dV}{dt} = Q_{in} - Q_{out}
+$$
+where the volume is in m$^3$. Since the tank is cylindrical the volume of water in the tank is given by $V=\pi R_T^2 y$. 
+
+The inflow $Q_{in}$ is constant and the outflow is given by
+$$
+Q_{out} = \begin{cases} 
+0 &\mbox{if the fountain is not running,} \\ 
+C\sqrt{2gy}\pi r^2 & \mbox{if the fountain is running.}
+\end{cases}
+$$
+
+By adding a nondimensional variable $s$ (for siphon) which is $1$ when the fountain is running and $0$ when it is not running we can write the governing equation as
+$$
+\frac{dy}{dt} = \frac{Q_{in} - s C\sqrt{2gy}\pi r^2}{\pi R_T^2}
+$$
+
+The value of the siphon $s$ depends on the state of the system and changes when the water level passes $y_{low}$ and $y_{high}$. The siphon $s$ is set to zero whenever the level is at or below $y_{low}$. Conversely, the siphon $s$ is set to one whenever the level is at or above $y_{high}$. As long as the water level is between $y_{low}$ and $y_{high}$ the value of the siphon $s$ doesn't change.
+###W07-W2_parta_end
+
+###W07-W2_partb_start_py
+import numpy as np
+def Pliny(t, y, radius_tank, radius_pipe, y_low, y_high, C, Qin):
+    ''' Function describing the ODE for the water height in the tank
+    '''
+    global siphon # Global variable for simplicity
+    g = 9.81      # Gravitational constant [m^2/s]
+
+    # The siphon is only switched if the water level is 
+    # above the high limit or below the low limit
+    if y >= y_high:
+        siphon = 1
+    elif y <= y_low:
+        siphon = 0
+    
+    # Set the outflow to zero if the tank is empty
+    if y > 0:
+        Qout = siphon * C * np.sqrt(2*g*y) * np.pi * radius_pipe**2
+    else:
+        Qout = 0.0
+        
+    dy = (Qin - Qout)/(np.pi*radius_tank**2)
+    return dy
+###W07-W2_partb_end
+
+###W07-W2_partc_start_py
+# Solve stiff ODE system with different ODE solvers
+from scipy.integrate import solve_ivp
+import time
+
+siphon = 0
+
+# Parameters
+radius_tank = 0.05      # Tank radius [m]
+radius_pipe = 0.007     # Pipe radius [m]
+y_low = 0.025           # Lower water limit [m]
+y_high = 0.1            # Upper water limit [m]
+C = 0.6                 # Pipe flow parameter
+Qin = 50e-6             # Water inflow [m^3/s]
+
+# Initial value
+y0 = 0
+
+start = time.time()
+sol = solve_ivp(Pliny, [0, 100], [y0], args=(radius_tank, radius_pipe, y_low, y_high, C, Qin))
+print("The integration took {:5.4f} seconds".format(time.time()-start))
+
+import matplotlib.pyplot as plt
+plt.plot(sol.t, sol.y[0,:], 'rx--', label="Water level")
+plt.axhline(y_low, color='g', linestyle='-', label="Lower limit")
+plt.axhline(y_high, color='c', linestyle='-', label="Upper limit")
+plt.xlabel("Solution time [s]")
+plt.ylabel("Water level [m]")
+plt.legend()
+plt.show()
+###W07-W2_partc_end
+
+###W07-W2_partd_start_md
+**Solution part d)**
+
+The plot clearly shows that the solver generates a solution which is not behaving as expected. After the initial filling period, the water level in the tank should oscillate between $y_{low}$ and $y_{high}$. However, for the solution the oscillations don't reach the switching points. 
+###W07-W2_partd_end
+
+###W07-W2_parte_start_py
+# Solve stiff ODE system with different ODE solvers
+from scipy.integrate import solve_ivp
+import time
+
+siphon = 0
+
+# Parameters
+radius_tank = 0.05      # Tank radius [m]
+radius_pipe = 0.007     # Pipe radius [m]
+y_low = 0.025           # Lower water limit [m]
+y_high = 0.1            # Upper water limit [m]
+C = 0.6                 # Pipe flow parameter
+Qin = 50e-6             # Water inflow [m^3/s]
+
+# Initial value
+y0 = 0
+
+# Implicit solver
+start = time.time()
+sol = solve_ivp(Pliny, [0, 100], [y0], method='LSODA', args=(radius_tank, radius_pipe, y_low, y_high, C, Qin))
+print("The integration took {:5.4f} seconds".format(time.time()-start))
+
+import matplotlib.pyplot as plt
+plt.plot(sol.t, sol.y[0,:], 'rx--', label="Water level")
+plt.axhline(y_low, color='g', linestyle='-', label="Lower limit")
+plt.axhline(y_high, color='c', linestyle='-', label="Upper limit")
+plt.xlabel("Solution time [s]")
+plt.ylabel("Water level [m]")
+plt.title("Implicit solver")
+plt.legend()
+plt.show()
+
+# Tighter tolerances 
+start = time.time()
+sol = solve_ivp(Pliny, [0, 100], [y0], method='RK45', rtol=1e-12, atol=1e-10, args=(radius_tank, radius_pipe, y_low, y_high, C, Qin))
+print("The integration took {:5.4f} seconds".format(time.time()-start))
+
+import matplotlib.pyplot as plt
+plt.plot(sol.t, sol.y[0,:], 'rx--', label="Water level")
+plt.axhline(y_low, color='g', linestyle='-', label="Lower limit")
+plt.axhline(y_high, color='c', linestyle='-', label="Upper limit")
+plt.xlabel("Solution time [s]")
+plt.ylabel("Water level [m]")
+plt.title("Tighter tolerances")
+plt.legend()
+plt.show()
+
+# Max step size
+start = time.time()
+sol = solve_ivp(Pliny, [0, 100], [y0], method='RK45', max_step=0.1, args=(radius_tank, radius_pipe, y_low, y_high, C, Qin))
+print("The integration took {:5.4f} seconds".format(time.time()-start))
+
+import matplotlib.pyplot as plt
+plt.plot(sol.t, sol.y[0,:], 'rx--', label="Water level")
+plt.axhline(y_low, color='g', linestyle='-', label="Lower limit")
+plt.axhline(y_high, color='c', linestyle='-', label="Upper limit")
+plt.xlabel("Solution time [s]")
+plt.ylabel("Water level [m]")
+plt.title("Step size control")
+plt.legend()
+plt.show()
+###W07-W2_parte_end
