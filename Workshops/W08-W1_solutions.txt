@@ -1,0 +1,114 @@
+###W08-W1_parta_start_md
+For $i=0$ and $i=n-1$ the concentration is equal to the gas phase concentration $c_{A,s}$ which was used as the characteristic value for the nondimensionalisation. Next we apply the finite difference approximation to the second derivative for $i=1,2,3, \dots, n-2$ to get the following discretisation of $\tilde{c}_A$ along the thickness $\xi$ of the slab
+\begin{align*}
+0 &= \tilde{c}_{A,0} - 1 \\
+\frac{\partial \tilde{c}_{A,i}}{\partial \tau} &= \frac{\tilde{c}_{A,i+1} - 2 \tilde{c}_{A,i} + \tilde{c}_{A,i-1}}{(\Delta \xi)^2} - \phi\tilde{c}_{A,i}^2, \quad i=1,2,\dots, n-2 \\
+0 &= \tilde{c}_{A,n-1} - 1 
+\end{align*}
+where $\Delta \xi$ is the spacing between grid points. The value at the slab boundary is equal to $1$ because this is the nondimensional gas phase concentration.
+###W08-W1_parta_end
+
+###W08-W1_partb_start_py
+import numpy as np
+def catalyst_slab_steady(c, dh, phi,fast=True):
+    n = np.shape(c)[0]
+    dc = np.zeros(n)
+    dc[0] = 1 - c[0]
+
+    if fast:
+        # Faster implementation with vectorised numpy code
+        dc[1:n-1] = (c[2:n] - 2*c[1:n-1] + c[0:n-2]) / (dh * dh) - phi * c[1:n-1] * c[1:n-1]
+    else:
+        # Slower implementation with a for loop
+        for i in range(1, n-1):
+            dc[i] = (c[i+1] - 2*c[i] + c[i-1])/(dh * dh) - phi * c[i] * c[i]
+
+    dc[n-1] = 1 - c[n-1]
+    return dc
+###W08-W1_partb_end
+
+
+###W08-W1_partc_start_py
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+
+phi = 1.0
+n = 5
+
+for i in range(4):
+    dh = 1.0/(n-1)
+    h = np.linspace(-0.5, 0.5, n)
+    # Define initial conditions
+    c0 = np.ones(n)
+    c = fsolve(catalyst_slab_steady, c0, args=(dh, phi))
+
+    plt.plot(h, c, label="n={}".format(n))
+    n *= 2
+
+plt.title("Different values of n")
+plt.xlabel(r"$\xi$")
+plt.ylabel("c")
+plt.legend()
+plt.show()
+###W08-W1_partc_end
+
+###W08-W1_partd_start_py
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+
+phi = 0.1
+n = 20
+
+for i in range(12):
+    dh = 1.0/(n-1)
+    h = np.linspace(-0.5, 0.5, n)
+    # Define initial conditions
+    c0 = np.ones(n)
+    c = fsolve(catalyst_slab_steady, c0, args=(dh, phi))
+
+    plt.plot(h, c, label=r"$\phi$={}".format(phi))
+    phi *= 2
+
+plt.title(r"Different values of $\phi$")
+plt.xlabel(r"$\xi$")
+plt.ylabel("c")
+plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+plt.show()
+###W08-W1_partd_end
+
+###W08-W1_parte_start_py
+import numpy as np
+def catalyst_slab_transient(t, c):
+    n = np.shape(c)[0]
+    dh = 1/(n-1)
+    phi = 1.0
+    dc = np.zeros(n)
+    dc[0] = 1 - c[0]
+    for i in range(1, n-1):
+        dc[i] = (c[i+1] - 2*c[i] + c[i-1])/(dh * dh) - phi * c[i] * c[i]
+    dc[n-1] = 1 - c[n-1]
+    return dc
+
+from scipy.integrate import solve_ivp
+
+n = 10
+dh = 1.0/(n-1)
+phi = 1.0
+
+# Initial values
+c0 = np.zeros(n)
+c0[0] = 1.0
+c0[-1] = 1.0
+
+sol = solve_ivp(catalyst_slab_transient, [0, 1], c0, method="Radau")
+
+# Define the meshgrid
+h = np.linspace(-0.5, 0.5, n)
+X, T = np.meshgrid(sol.t, h)
+      
+h = plt.contour(X, T, sol.y)
+plt.colorbar(h)
+plt.xlabel("Time axis")
+plt.ylabel("Space axis")
+plt.show()
+###W08-W1_parte_end
