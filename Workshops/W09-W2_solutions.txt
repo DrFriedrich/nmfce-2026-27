@@ -1,0 +1,36 @@
+###W09-W2_partb_start_md
+The website https://neos-guide.org/case-studies/om/the-diet-problem/ shows a simple diet problem for the provision of calories (between 2000 and 2250) and the amount of Vitamin A (between 5000 and 50,000) from three foods types: corn, milk, and bread.
+
+| Food        | Cost per serving | Vitamin A | Calories |
+|-------------|------------------|-----------|----------|
+| Corn        | \$0.18           | 107       | 72       |
+| 2% Milk     | \$0.23           | 500       | 121      |
+| Wheat Bread | \$0.05           | 0         | 65       |
+|             |                  |           |          |
+
+    ###W09-W2_partb_end
+
+###W09-W2_partc_start_py
+import numpy as np
+from scipy.optimize import linprog
+
+# We want to minimise the costs
+c = [0.18, 0.23, 0.05]
+
+# Array with the parameters for inequality constraint matrix
+A = [[107, 500, 0], [-107, -500, 0], [72, 121, 65], [-72, -121, -65]]
+
+# Right hand side of the inequality constraints
+b = [50000, -5000, 2250, -2000]
+
+# Bounds for the number of toys
+x0_bounds = (0, 10)
+x1_bounds = (0, 10)
+x2_bounds = (0, 10)
+
+# Use scipy.optimize.linprog to solve the optimisation
+res = linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds, x2_bounds])
+
+print("Total costs are ${}.".format(np.dot(res.x, c)))
+print("The total amount of Vitamin A is {:.0f} and the total number of calories is {:.0f}.".format(np.dot(A[0], res.x), np.dot(A[2], res.x)))
+###W09-W2_partc_end
